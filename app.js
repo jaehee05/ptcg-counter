@@ -26,6 +26,7 @@ const newGame = (names = ['나', '상대'], first = 0) => ({
   players: [newPlayer(names[0]), newPlayer(names[1])],
   turn: first,
   turnNo: 1,
+  mulligan: [0, 0],
 });
 
 let S = load(KEY) || newGame();
@@ -170,6 +171,7 @@ function renderCenter() {
   document.getElementById('center').innerHTML = `
     <div class="turninfo"><small>턴</small><b>${S.turnNo}</b><span>${esc(cur.name)}</span></div>
     <button class="cbtn primary" data-act="endturn">턴 종료<small>포켓몬 체크</small></button>
+    <button class="cbtn" data-act="guide">📖<small>준비·규칙</small></button>
     <button class="cbtn" data-act="coin">🪙<small>코인</small></button>
     <button class="cbtn" data-act="undo">↶<small>되돌리기</small></button>
     <button class="cbtn" data-act="settings">⚙<small>설정</small></button>`;
@@ -185,6 +187,8 @@ function renderModal() {
   else if (modal.type === 'coin') box.innerHTML = coinModal();
   else if (modal.type === 'settings') box.innerHTML = settingsModal();
   else if (modal.type === 'check') box.innerHTML = checkModal();
+  else if (modal.type === 'guide') box.innerHTML = guideModal();
+  box.classList.toggle('wide', modal.type === 'guide');
 }
 
 function editModal() {
@@ -262,6 +266,71 @@ function checkModal() {
       <button data-act="checkres" data-v="T">뒷면 (유지)</button>
     </div>
     <p class="hint">${checkQueue.length > 1 ? `남은 체크 ${checkQueue.length - 1}개` : ''}</p>`;
+}
+
+const GUIDE_TABS = [['setup', '게임 준비'], ['turn', '턴 진행'], ['cond', '특수상태'], ['win', '승리 조건']];
+
+function guideModal() {
+  const tab = modal.tab;
+  const P = S.players;
+  const mull = S.mulligan || [0, 0];
+  let body = '';
+  if (tab === 'setup') {
+    body = `<ol class="steps">
+      <li><b>악수하고 덱(60장)을 섞기</b><span>상대 덱을 섞어 줘도 돼요.</span></li>
+      <li><b>코인 던지기로 선공 정하기</b><span>이긴 사람이 선공·후공을 골라요. 설정 → 새 게임 → 🪙 랜덤으로도 가능.</span></li>
+      <li><b>덱 위에서 7장 뽑기</b></li>
+      <li><b>기본 포켓몬 1장을 뒷면으로 배틀 필드에</b><span>나머지 기본 포켓몬은 벤치에 최대 5장까지 뒷면으로 (선택).</span></li>
+      <li><b>기본 포켓몬이 없으면 멀리건</b><span>손패를 상대에게 보여주고 덱에 넣어 다시 섞은 뒤 7장 뽑기. 기본 포켓몬이 나올 때까지 반복해요. 상대는 멀리건 횟수만큼 카드를 더 뽑을 수 있어요 (선택).</span></li>
+      <li><b>덱 위에서 6장을 뒷면으로 프라이즈에</b><span>카드 앞면을 보지 않고 그대로 옆에 둬요.</span></li>
+      <li><b>동시에 포켓몬을 앞면으로 뒤집고 시작!</b><span>여기서 배틀·벤치 포켓몬을 앱에 등록해 두세요.</span></li>
+    </ol>
+    <div class="mull">
+      <div class="mtitle">멀리건 기록</div>
+      ${[0, 1].map((p) => `<div class="mrow"><span>${esc(P[p].name)}</span>
+        <div class="stepper"><button data-act="mull" data-p="${p}" data-v="-1">−</button><b>${mull[p]}</b><button data-act="mull" data-p="${p}" data-v="1">+</button></div>
+        <small>${mull[p] ? `→ ${esc(P[1 - p].name)} 최대 ${mull[p]}장 추가 드로우` : ''}</small></div>`).join('')}
+    </div>
+    <p class="note">⚠️ 선공 첫 턴: 드로우는 하지만 <b>공격 불가 · 서포터 사용 불가</b>. 양쪽 모두 첫 턴과, 이번 턴에 낸 포켓몬은 <b>진화 불가</b>.</p>`;
+  } else if (tab === 'turn') {
+    body = `<ol class="steps">
+      <li><b>덱에서 1장 드로우</b><span>뽑을 카드가 없으면 그 자리에서 패배.</span></li>
+      <li><b>아래 행동을 원하는 순서로</b>
+        <ul>
+          <li>기본 포켓몬을 벤치에 내기 (몇 장이든, 벤치 5칸까지)</li>
+          <li>진화 (각 포켓몬 턴당 1회 · 낸 턴엔 불가)</li>
+          <li>손패의 에너지 부착 <em>턴에 1번</em></li>
+          <li>서포터 <em>턴에 1번</em> · 스타디움 <em>턴에 1번</em> · 아이템·포켓몬의 도구는 자유</li>
+          <li>후퇴 <em>턴에 1번</em> (후퇴 에너지만큼 트래시, 특수상태 회복)</li>
+          <li>특성 사용</li>
+        </ul>
+      </li>
+      <li><b>공격</b> — 공격하면 턴이 끝나요.<span>약점 ×2 → 저항력 −30 순서로 계산.</span></li>
+      <li><b>포켓몬 체크</b> — 앱의 <b>턴 종료</b> 버튼이 독·화상·잠듦·마비를 처리해요.</li>
+      <li><b>기절시켰다면</b> 프라이즈를 가져가요 (포켓몬 ex·V는 2장, VMAX·메가진화 ex는 3장). 기절한 쪽은 벤치에서 새 배틀 포켓몬을 내요.</li>
+    </ol>`;
+  } else if (tab === 'cond') {
+    const row = (k, desc) => `<div class="crow"><span class="cb ${COND[k].cls}">${COND[k].label}</span><p>${desc}</p></div>`;
+    body = `<div class="clist">
+      ${row('poison', '포켓몬 체크마다 데미지 카운터 1개 (10).')}
+      ${row('burn', '포켓몬 체크마다 데미지 카운터 2개 (20), 그 후 코인 앞면이면 회복.')}
+      ${row('asleep', '공격·후퇴 불가. 포켓몬 체크 때 코인 앞면이면 회복. (카드를 왼쪽으로 돌려 표시)')}
+      ${row('paralyzed', '공격·후퇴 불가. 걸린 쪽 플레이어의 다음 턴이 끝난 후 포켓몬 체크 때 회복. (오른쪽으로 돌려 표시)')}
+      ${row('confused', '공격할 때 코인 → 뒷면이면 공격 실패, 자신에게 30 데미지. 후퇴는 가능. (거꾸로 돌려 표시)')}
+    </div>
+    <p class="note">잠듦·마비·혼란은 카드 방향으로 표시하기 때문에 <b>하나만</b> 걸려요 (새로 걸리면 교체). 독·화상은 따로 표시해서 함께 걸릴 수 있어요. <b>벤치로 가거나 진화하면 모든 특수상태가 회복</b>돼요.</p>`;
+  } else {
+    body = `<ol class="steps">
+      <li><b>프라이즈를 모두 가져가기</b></li>
+      <li><b>상대 필드에 포켓몬이 하나도 없게 만들기</b><span>배틀 포켓몬이 기절했는데 벤치에 낼 포켓몬이 없을 때.</span></li>
+      <li><b>상대가 턴 시작에 덱에서 카드를 뽑지 못하기</b></li>
+    </ol>
+    <p class="note">동시에 승리 조건을 만족하면 서든데스(프라이즈 1장으로 새 게임)로 결정해요.</p>`;
+  }
+  return `<h2>게임 가이드</h2>
+    <div class="seg tabs">${GUIDE_TABS.map(([k, l]) => `<button class="${tab === k ? 'on' : ''}" data-act="tab" data-v="${k}">${l}</button>`).join('')}</div>
+    <div class="guide">${body}</div>
+    <div class="mactions"><button data-act="close">닫기</button></div>`;
 }
 
 function render() {
@@ -409,6 +478,18 @@ function onAction(el) {
       modal.result = null;
       renderModal();
       break;
+    case 'guide':
+      modal = { type: 'guide', tab: v || 'setup' };
+      renderModal();
+      break;
+    case 'tab':
+      modal.tab = v;
+      renderModal();
+      document.getElementById('modal-box').scrollTop = 0;
+      break;
+    case 'mull':
+      commit(() => { S.mulligan = S.mulligan || [0, 0]; S.mulligan[p] = Math.max(0, S.mulligan[p] + +v); });
+      break;
     case 'settings':
       modal = { type: 'settings' };
       renderModal();
@@ -435,6 +516,8 @@ function onAction(el) {
       const first = v === 'r' ? (Math.random() < 0.5 ? 0 : 1) : +v;
       const names = S.players.map((P) => P.name);
       commit(() => { S = newGame(names, first); modal = null; });
+      modal = { type: 'guide', tab: 'setup' };
+      renderModal();
       toast(`새 게임 · ${esc(S.players[first].name)} 선공${v === 'r' ? ' (코인)' : ''}`, 2400);
       break;
     }
@@ -496,4 +579,5 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
 
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
 
+if (!load(KEY)) { modal = { type: 'guide', tab: 'setup' }; save(); }
 render();

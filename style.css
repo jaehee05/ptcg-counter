@@ -271,3 +271,31 @@ body.face .cond { padding: 7px 0; font-size: 14px; }
 body.face .a-actions button { padding: 6px 0; font-size: 13px; }
 body.face .mname { font-size: 18px; }
 body.face .dmgval b { font-size: clamp(40px, 8vh, 72px); }
+
+/* 가이드 */
+.modal-box.wide { width: min(760px, 100%); }
+.tabs { align-self: flex-start; }
+.guide { font-size: 16px; line-height: 1.55; }
+.steps { margin: 0; padding-left: 0; list-style: none; counter-reset: s; display: flex; flex-direction: column; gap: 10px; }
+.steps > li { counter-increment: s; position: relative; padding-left: 42px; }
+.steps > li::before {
+  content: counter(s); position: absolute; left: 0; top: 0;
+  width: 28px; height: 28px; border-radius: 50%; background: var(--accent); color: var(--accent-ink);
+  font-weight: 900; font-size: 15px; display: flex; align-items: center; justify-content: center;
+}
+.steps span { display: block; color: var(--dim); font-size: 14px; }
+.steps ul { margin: 6px 0 0; padding-left: 18px; color: var(--dim); font-size: 14px; }
+.steps em { font-style: normal; color: var(--accent); font-weight: 700; }
+.note { background: var(--card); border-radius: 12px; padding: 12px 14px; font-size: 14px; color: var(--dim); margin: 12px 0 0; }
+.note b { color: var(--text); }
+.mull { margin-top: 14px; background: var(--card); border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
+.mtitle { font-weight: 800; font-size: 14px; }
+.mrow { display: grid; grid-template-columns: 80px auto 1fr; align-items: center; gap: 12px; font-weight: 700; }
+.mrow small { color: var(--accent); font-size: 13px; }
+.stepper { display: flex; align-items: center; gap: 10px; }
+.stepper button { width: 38px; height: 38px; font-size: 20px; font-weight: 800; }
+.stepper b { min-width: 18px; text-align: center; font-size: 18px; }
+.clist { display: flex; flex-direction: column; gap: 10px; }
+.crow { display: flex; gap: 12px; align-items: flex-start; }
+.crow .cb { flex-shrink: 0; width: 48px; text-align: center; padding: 4px 0; }
+.crow p { margin: 0; font-size: 15px; }
