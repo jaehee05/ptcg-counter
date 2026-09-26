@@ -395,3 +395,8 @@ body.phone .cbtn small { white-space: nowrap; }
   body.phone-l .panel { grid-template-columns: 96px minmax(0, 1fr) minmax(0, 0.9fr); }
   body.phone-l .dmgval b { font-size: 38px; }
 }
+.mactions.ng button.primary { order: -1; }
+body.phone-p #center { gap: 5px; }
+body.phone-p .turninfo { padding: 0 7px; }
+body.phone-p .turninfo span { display: none; }
+body.phone-p .cbtn small { font-size: 9px; }

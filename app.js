@@ -174,6 +174,7 @@ function renderCenter() {
     <button class="cbtn" data-act="guide">📖<small>규칙</small></button>
     <button class="cbtn" data-act="coin">🪙<small>코인</small></button>
     <button class="cbtn" data-act="undo">↶<small>되돌리기</small></button>
+    <button class="cbtn" data-act="newgamemenu">🔄<small>새 게임</small></button>
     <button class="cbtn" data-act="settings">⚙<small>설정</small></button>`;
 }
 
@@ -188,6 +189,7 @@ function renderModal() {
   else if (modal.type === 'settings') box.innerHTML = settingsModal();
   else if (modal.type === 'check') box.innerHTML = checkModal();
   else if (modal.type === 'guide') box.innerHTML = guideModal();
+  else if (modal.type === 'newgame') box.innerHTML = newGameModal();
   box.classList.toggle('wide', modal.type === 'guide');
 }
 
@@ -226,6 +228,18 @@ function coinModal() {
       <button class="primary" data-act="flip">다시 던지기</button>
       <button data-act="coinreset">기록 지우기</button>
       <button data-act="close">닫기</button>
+    </div>`;
+}
+
+function newGameModal() {
+  const P = S.players;
+  return `<h2>새 게임</h2>
+    <p class="hint" style="margin:0">데미지·프라이즈·벤치가 모두 초기화돼요. (되돌리기로 복구 가능)</p>
+    <div class="mactions ng">
+      <button data-act="newgame" data-v="0">${esc(P[0].name)} 선공</button>
+      <button data-act="newgame" data-v="1">${esc(P[1].name)} 선공</button>
+      <button class="primary" data-act="newgame" data-v="r">🪙 코인으로 선공 정하기</button>
+      <button data-act="close">취소</button>
     </div>`;
 }
 
@@ -517,6 +531,10 @@ function onAction(el) {
       break;
     case 'mull':
       commit(() => { S.mulligan = S.mulligan || [0, 0]; S.mulligan[p] = Math.max(0, S.mulligan[p] + +v); });
+      break;
+    case 'newgamemenu':
+      modal = { type: 'newgame' };
+      renderModal();
       break;
     case 'settings':
       modal = { type: 'settings' };
