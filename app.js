@@ -23,7 +23,7 @@ const newPlayer = (name) => ({
   gx: false,
 });
 const newGame = (names = ['나', '상대'], first = 0) => ({
-  players: [newPlayer(names[0]), newPlayer(names[1])],
+  players: [newPlayer(names[0]), newPlayer(names[1])].map((P) => ((P.active = newMon()), P)),
   turn: first,
   turnNo: 1,
   mulligan: [0, 0],
@@ -62,7 +62,7 @@ const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '
 const getMon = (p, slot) => (slot === 'a' ? S.players[p].active : S.players[p].bench[slot]);
 const setMon = (p, slot, m) => { if (slot === 'a') S.players[p].active = m; else S.players[p].bench[slot] = m; };
 const isKO = (m) => m && m.hp > 0 && m.dmg >= m.hp;
-const monLabel = (m, slot) => (m && m.name) || (slot === 'a' ? '배틀 포켓몬' : '벤치 포켓몬');
+const monLabel = (m, slot) => (m && m.name) || (slot === 'a' ? '배틀 포켓몬' : `벤치 ${slot + 1}`);
 
 let toastTimer;
 function toast(msg, ms = 1800) {
@@ -90,7 +90,7 @@ function condBadges(m) {
 
 function renderActive(p) {
   const a = S.players[p].active;
-  if (!a) return `<div class="active empty" data-act="add" data-p="${p}" data-slot="a"><span>+ 배틀 포켓몬</span></div>`;
+  if (!a) return `<div class="active empty" data-act="add" data-p="${p}" data-slot="a"><span>+ 배틀 포켓몬 놓기</span></div>`;
   const ko = isKO(a);
   const left = a.hp ? Math.max(0, a.hp - a.dmg) : null;
   const condBtn = (k) => {
@@ -171,7 +171,7 @@ function renderCenter() {
   document.getElementById('center').innerHTML = `
     <div class="turninfo"><small>턴</small><b>${S.turnNo}</b><span>${esc(cur.name)}</span></div>
     <button class="cbtn primary" data-act="endturn">턴 종료<small>포켓몬 체크</small></button>
-    <button class="cbtn" data-act="guide">📖<small>준비·규칙</small></button>
+    <button class="cbtn" data-act="guide">📖<small>규칙</small></button>
     <button class="cbtn" data-act="coin">🪙<small>코인</small></button>
     <button class="cbtn" data-act="undo">↶<small>되돌리기</small></button>
     <button class="cbtn" data-act="settings">⚙<small>설정</small></button>`;
@@ -182,7 +182,7 @@ function renderModal() {
   const wrap = document.getElementById('modal');
   if (!modal) { wrap.classList.add('hidden'); box.innerHTML = ''; return; }
   wrap.classList.remove('hidden');
-  box.classList.toggle('flip', prefs.layout === 'face' && modal.p === 1);
+  box.classList.toggle('flip', document.body.classList.contains('face') && modal.p === 1);
   if (modal.type === 'edit') box.innerHTML = editModal();
   else if (modal.type === 'coin') box.innerHTML = coinModal();
   else if (modal.type === 'settings') box.innerHTML = settingsModal();
@@ -333,8 +333,34 @@ function guideModal() {
     <div class="mactions"><button data-act="close">닫기</button></div>`;
 }
 
+// 폰은 한 명씩 탭으로 보기 (세로: phone-p, 가로: phone-l), 태블릿은 설정값
+function layoutMode() {
+  const w = window.innerWidth, h = window.innerHeight;
+  if (w < 700 && w <= h) return 'phone phone-p';
+  if (h < 560 && w > h) return 'phone phone-l';
+  return prefs.layout === 'face' ? 'face' : 'side';
+}
+let view = 0; // 폰에서 보고 있는 플레이어
+
+function renderTabs() {
+  document.getElementById('tabs').innerHTML = [0, 1].map((p) => {
+    const P = S.players[p];
+    const a = P.active;
+    const left = P.prizes.filter((x) => !x).length;
+    return `<button class="tab ${view === p ? 'on' : ''} ${S.turn === p ? 'turn' : ''}" data-act="view" data-v="${p}">
+      <b>${S.turn === p ? '▶ ' : ''}${esc(P.name)}</b>
+      <span>프라이즈 ${left}${a ? ` · 데미지 ${a.dmg}` : ''}${a ? condBadges(a) : ''}</span>
+    </button>`;
+  }).join('');
+}
+
 function render() {
-  document.body.className = prefs.layout === 'face' ? 'face' : 'side';
+  const mode = layoutMode();
+  document.body.className = mode;
+  const phone = mode.startsWith('phone');
+  document.getElementById('p0').classList.toggle('offview', phone && view !== 0);
+  document.getElementById('p1').classList.toggle('offview', phone && view !== 1);
+  if (phone) renderTabs();
   renderPanel(0);
   renderPanel(1);
   renderCenter();
@@ -404,8 +430,6 @@ function onAction(el) {
   switch (act) {
     case 'add':
       commit(() => setMon(p, slot, newMon()));
-      modal = { type: 'edit', p, slot };
-      renderModal();
       break;
     case 'edit':
       modal = { type: 'edit', p, slot };
@@ -477,6 +501,10 @@ function onAction(el) {
       modal.log = [];
       modal.result = null;
       renderModal();
+      break;
+    case 'view':
+      view = +v;
+      render();
       break;
     case 'guide':
       modal = { type: 'guide', tab: v || 'setup' };
@@ -578,6 +606,9 @@ document.addEventListener('pointerdown', keepAwake, { passive: true });
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') keepAwake(); });
 
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+
+// 모드가 바뀔 때만 다시 그림 (키보드가 올라올 때 입력칸 포커스 유지)
+window.addEventListener('resize', () => { if (layoutMode() !== document.body.className) render(); });
 
 if (!load(KEY)) { modal = { type: 'guide', tab: 'setup' }; save(); }
 render();

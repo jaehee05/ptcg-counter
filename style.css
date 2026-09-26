@@ -299,3 +299,99 @@ body.face .dmgval b { font-size: clamp(40px, 8vh, 72px); }
 .crow { display: flex; gap: 12px; align-items: flex-start; }
 .crow .cb { flex-shrink: 0; width: 48px; text-align: center; padding: 4px 0; }
 .crow p { margin: 0; font-size: 15px; }
+
+/* ---------- 폰: 한 명씩 탭으로 보기 ---------- */
+#tabs { display: none; }
+body.phone #tabs { display: flex; gap: 6px; grid-area: tabs; }
+body.phone .panel { grid-area: panel; overflow-y: auto; padding: 8px; gap: 8px; }
+body.phone .panel.offview { display: none; }
+body.phone #center { grid-area: center; }
+.tab {
+  flex: 1; min-width: 0; padding: 7px 10px; background: var(--panel); border: 2px solid transparent;
+  display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left;
+}
+.tab b { font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.tab span { font-size: 12px; color: var(--dim); display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+.tab .cb { font-size: 10px; padding: 1px 5px; }
+.tab.on { background: var(--card2); border-color: var(--line); }
+.tab.turn b { color: var(--accent); }
+.tab:active { transform: none; }
+
+body.phone .phead { flex-wrap: wrap; gap: 6px; }
+body.phone .pname { font-size: 17px; padding: 2px 4px; }
+body.phone .flags { gap: 4px; }
+body.phone .flag, body.phone .once { padding: 6px 7px; font-size: 12px; border-radius: 9px; }
+body.phone .plabel b { font-size: 20px; }
+body.phone .prize { max-height: 46px; font-size: 13px; border-radius: 6px; }
+body.phone .active { padding: 10px; gap: 8px; }
+body.phone .mname { font-size: 17px; }
+body.phone .dbtn { min-height: 0; font-size: 18px; border-radius: 10px; }
+body.phone .dcol { gap: 6px; }
+body.phone .a-mid { gap: 8px; }
+body.phone .dmgval b { font-size: 56px; }
+body.phone .cond { padding: 9px 0; font-size: 13px; border-radius: 10px; }
+body.phone .conds { gap: 4px; }
+body.phone .sep { width: 2px; }
+body.phone .a-actions button { padding: 7px 0; font-size: 13px; }
+body.phone .btile { padding: 6px; min-height: 0; border-radius: 10px; }
+body.phone .bname { font-size: 11px; }
+body.phone .bdmg { flex-direction: column; align-items: center; justify-content: center; gap: 0; padding-top: 0; }
+body.phone .bdmg b { font-size: 22px; line-height: 1.1; }
+body.phone .bdmg small { font-size: 10px; }
+body.phone .bquick { position: static; width: 100%; padding: 5px 0; margin-top: 4px; }
+body.phone .btile.empty { font-size: 22px; }
+body.phone .turninfo { flex-direction: row; gap: 4px; padding: 0 10px; }
+body.phone .turninfo b { font-size: 22px; }
+body.phone .cbtn { font-size: 20px; gap: 2px; border-radius: 12px; }
+body.phone .cbtn small { font-size: 10px; }
+body.phone .cbtn.primary { font-size: 15px; }
+
+/* 폰 세로 */
+body.phone-p #board { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) 58px; grid-template-areas: "tabs" "panel" "center"; gap: 6px; }
+body.phone-p .panel { grid-template-rows: auto auto minmax(250px, 1fr) auto; grid-template-areas: "head" "prize" "active" "bench"; }
+body.phone-p #center { flex-direction: row; gap: 6px; }
+body.phone-p .cbtn.primary { flex: 2; }
+body.phone-p .bench.b5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+body.phone-p .bench.b8 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+body.phone-p .btile { min-height: 92px; }
+
+/* 폰 가로 */
+body.phone-l #board { grid-template-columns: minmax(0, 1fr) 70px; grid-template-rows: auto minmax(0, 1fr); grid-template-areas: "tabs center" "panel center"; gap: 6px; }
+body.phone-l .panel { grid-template-columns: 116px minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); grid-template-areas: "head head head" "prize active bench"; }
+body.phone-l .phead { flex-wrap: nowrap; }
+body.phone-l .prizes { flex-direction: column; align-items: stretch; gap: 4px; }
+body.phone-l .plabel { display: flex; align-items: baseline; gap: 6px; }
+body.phone-l .pgrid { grid-template-columns: repeat(3, 1fr); gap: 4px; align-content: start; }
+body.phone-l .prize { max-height: 50px; }
+body.phone-l .bench { grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-rows: minmax(0, 1fr); gap: 6px; }
+body.phone-l .bench.b8 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+body.phone-l .dmgval b { font-size: 44px; }
+body.phone-l .a-top { gap: 6px; }
+body.phone-l .mname { font-size: 15px; }
+body.phone-l .hp { font-size: 12px; }
+body.phone-l .cond { padding: 6px 0; font-size: 12px; }
+body.phone-l .a-actions button { padding: 5px 0; font-size: 12px; }
+body.phone-l .dbtn { font-size: 15px; }
+body.phone-l .tab { flex-direction: row; align-items: center; gap: 8px; padding: 5px 10px; }
+body.phone-l #center { flex-direction: column; gap: 5px; }
+body.phone-l .turninfo { flex-direction: column; padding: 4px 0; gap: 0; }
+body.phone-l .turninfo span { display: none; }
+body.phone-l .cbtn { font-size: 17px; }
+body.phone-l .cbtn.primary { font-size: 13px; flex: 1.6; }
+
+/* 폰 모달 */
+body.phone .modal { padding: 10px; }
+body.phone .modal-box { padding: 16px; gap: 10px; border-radius: 16px; }
+body.phone .edmg { min-height: 160px; }
+body.phone .guide { font-size: 15px; }
+body.phone .srow { flex-wrap: wrap; }
+body.phone .mrow { grid-template-columns: 64px auto; }
+body.phone .mrow small { grid-column: 1 / -1; }
+.activewrap, .active { min-width: 0; }
+.a-mid, .edmg { grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) minmax(0, 1fr); }
+body.phone .tab span { flex-wrap: nowrap; white-space: nowrap; overflow: hidden; max-width: 100%; }
+body.phone .cbtn small { white-space: nowrap; }
+@media (max-width: 720px) {
+  body.phone-l .panel { grid-template-columns: 96px minmax(0, 1fr) minmax(0, 0.9fr); }
+  body.phone-l .dmgval b { font-size: 38px; }
+}
